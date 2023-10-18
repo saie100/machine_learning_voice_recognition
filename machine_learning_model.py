@@ -1,8 +1,15 @@
+import os
 import torch
 import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 from torch.nn import init
+from torch.utils.data import random_split
+import pandas as pd
+from pathlib import Path
+from SoundDS import SoundDS
+from AudioUtil import AudioUtil
+
 
 # ----------------------------
 # Audio Classification Model
@@ -163,17 +170,55 @@ def inference (model, val_dl):
 
 
 
-# Create the model and put it on the GPU if available
-myModel = AudioClassifier()
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-myModel = myModel.to(device)
-# Check that it is on Cuda
-next(myModel.parameters()).device
+def main():
+  # ----------------------------
+  # Prepare training data from Metadata file
+  # ----------------------------
 
-num_epochs=2   # Just for demo, adjust this higher.
-training(myModel, train_dl, num_epochs)
 
-# Run inference on trained model with the validation set
-inference(myModel, val_dl)
+  # Read metadata file
+  metadata_file = 'metadata.csv'
+  df = pd.read_csv(metadata_file)
+  df.head()
 
+  # Take relevant columns
+  df = df[['relative_path', 'classID']]
+  df.head()
+
+  current_directory = os.getcwd() + "/"
+  myds = SoundDS(df, current_directory)
+
+  # Random split of 80:20 between training and validation
+  num_items = len(myds)
+  num_train = round(num_items * 0.8)
+  num_val = num_items - num_train
+  train_ds, val_ds = random_split(myds, [num_train, num_val])
+
+  # Create training and validation data loaders
+  train_dl = torch.utils.data.DataLoader(train_ds, batch_size=2, shuffle=True)
+  val_dl = torch.utils.data.DataLoader(val_ds, batch_size=2, shuffle=False)
+
+
+
+
+  # Create the model and put it on the GPU if available
+  myModel = AudioClassifier()
+  global device
+  device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  myModel = myModel.to(device)
+  # Check that it is on Cuda
+  next(myModel.parameters()).device
+
+  num_epochs=2   # Just for demo, adjust this higher.
+  training(myModel, train_dl, num_epochs)
+
+  # Run inference on trained model with the validation set
+  inference(myModel, val_dl)
+
+
+
+
+
+if __name__ == '__main__':
+   main()
 
