@@ -195,11 +195,10 @@ def main():
   train_ds, val_ds = random_split(myds, [num_train, num_val])
 
   # Create training and validation data loaders
-  train_dl = torch.utils.data.DataLoader(train_ds, batch_size=2, shuffle=True)
-  val_dl = torch.utils.data.DataLoader(val_ds, batch_size=2, shuffle=False)
+  train_dl = torch.utils.data.DataLoader(train_ds, batch_size=1, shuffle=True)
+  val_dl = torch.utils.data.DataLoader(val_ds, batch_size=1, shuffle=False)
 
-
-
+  
 
   # Create the model and put it on the GPU if available
   myModel = AudioClassifier()
@@ -209,7 +208,7 @@ def main():
   # Check that it is on Cuda
   next(myModel.parameters()).device
 
-  num_epochs=2   # Just for demo, adjust this higher.
+  num_epochs=50   # increase num of epochs until there isn't much change in validation loss
   training(myModel, train_dl, num_epochs)
 
   # Run inference on trained model with the validation set
