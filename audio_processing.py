@@ -11,6 +11,10 @@ import torchaudio.transforms as T
 from sklearn import preprocessing
 from matplotlib import interactive
 from matplotlib.patches import Rectangle
+import pandas as pd
+import os
+
+
 
 def plot_waveform(waveform, sr, title="Waveform", ax=None):
     waveform = waveform.numpy()
@@ -25,37 +29,65 @@ def plot_waveform(waveform, sr, title="Waveform", ax=None):
     ax.set_xlim([0, time_axis[-1]])
     ax.set_title(title)
 
-def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None):
+def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None, file_name='images/spectrogram.png'):
+    # if ax is None:
+    #     _, ax = plt.subplots(1, 1)
+    # if title is not None:
+    #     ax.set_title(title)
+    # ax.set_ylabel(ylabel)
+    # ax.imshow(librosa.power_to_db(specgram), origin="lower", aspect="auto", interpolation="nearest")
+    # plt.savefig(file_name)
+    # plt.close()
+    num_channels = specgram.shape[0]
     if ax is None:
-        _, ax = plt.subplots(1, 1)
-    if title is not None:
-        ax.set_title(title)
-    ax.set_ylabel(ylabel)
-    ax.imshow(librosa.power_to_db(specgram), origin="lower", aspect="auto", interpolation="nearest")
-
+        _, ax = plt.subplots(num_channels, 1, figsize=(10, 4*num_channels))
+    if num_channels == 1:
+        ax = [ax]
+    for i in range(num_channels):
+        if title is not None:
+            ax[i].set_title(f"{file_name} - Channel {i+1}")
+        ax[i].set_ylabel(ylabel)
+        ax[i].imshow(librosa.power_to_db(specgram[i]), origin="lower", aspect="auto", interpolation="nearest")
+    plt.tight_layout()
+    plt.savefig(file_name)
+    plt.close()
 
 
 # Load the audio file
-AUDIO_FILE = '/home/saie/Desktop/MachineLearning/dataset_1/OSR_us_000_0037_8k.wav'
-aud = AudioUtil.open(AUDIO_FILE)
-sample_rate = 44100
-duration = 4000
-channel = 2
-shift_pct = 0.4
-# Some sounds have a higher sample rate, or fewer channels compared to the
-# majority. So make all sounds have the same number of channels and same 
-# sample rate. Unless the sample rate is the same, the pad_trunc will still
-# result in arrays of different lengths, even though the sound duration is
-# the same.
-reaud = AudioUtil.resample(aud, sample_rate)
-rechan = AudioUtil.rechannel(reaud, channel)
+meta_data_df = pd.read_csv("audio/other_voice/meta_data.csv", header=None)
+meta_data_df.head()
 
-dur_aud = AudioUtil.pad_trunc(rechan, duration)
-shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)
-sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
-aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=2, n_time_masks=2)
+file_names=meta_data_df.columns[0]
+file_names = [file_names] + meta_data_df[file_names].tolist()
+IMAGE_DIR='images2'
 
-plot_spectrogram(aug_sgram)
+if not os.path.exists(IMAGE_DIR) and  not os.path.isdir(IMAGE_DIR):
+    os.mkdir(IMAGE_DIR)
+for file_name in file_names:
+    try:
+        AUDIO_FILE = f'/home/daniel/git/machine_learning_voice_recognition/audio/other_voice/{file_name}'
+        aud = AudioUtil.open(AUDIO_FILE)
+
+        sample_rate = 44100
+        duration = 4000
+        channel = 2
+        shift_pct = 0.0
+        # Some sounds have a higher sample rate, or fewer channels compared to the
+        # majority. So make all sounds have the same number of channels and same 
+        # sample rate. Unless the sample rate is the same, the pad_trunc will still
+        # result in arrays of different lengths, even though the sound duration is
+        # the same.
+        reaud = AudioUtil.resample(aud, sample_rate)
+        rechan = AudioUtil.rechannel(reaud, channel)
+
+        dur_aud = AudioUtil.pad_trunc(rechan, duration)
+        shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)
+        sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
+        aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
+        spectrogram_file_name=f"{IMAGE_DIR}/{file_name}.png"
+        plot_spectrogram(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
+    except Exception as e:
+        print(f"An error occured: {e}")
 
 
 """fig1 = plt.figure(1)
