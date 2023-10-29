@@ -30,14 +30,6 @@ def plot_waveform(waveform, sr, title="Waveform", ax=None):
     ax.set_title(title)
 
 def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None, file_name='images/spectrogram.png'):
-    # if ax is None:
-    #     _, ax = plt.subplots(1, 1)
-    # if title is not None:
-    #     ax.set_title(title)
-    # ax.set_ylabel(ylabel)
-    # ax.imshow(librosa.power_to_db(specgram), origin="lower", aspect="auto", interpolation="nearest")
-    # plt.savefig(file_name)
-    # plt.close()
     num_channels = specgram.shape[0]
     if ax is None:
         _, ax = plt.subplots(num_channels, 1, figsize=(10, 4*num_channels))
