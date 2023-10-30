@@ -208,7 +208,7 @@ def main():
   # Check that it is on Cuda
   next(myModel.parameters()).device
 
-  num_epochs=50   # increase num of epochs until there isn't much change in validation loss
+  num_epochs=25   # increase num of epochs until there isn't much change in validation loss
   training(myModel, train_dl, num_epochs)
 
   # Run inference on trained model with the validation set

@@ -1,6 +1,6 @@
-
-
 **/*.png
 **/*.wav
 **/*.mp3
 display/node_modules
+*.zip
+__pycache__/*
