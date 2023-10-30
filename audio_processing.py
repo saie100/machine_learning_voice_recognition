@@ -55,25 +55,16 @@ df.head()
 df = df[['relative_path', 'classID']]
 df.head()
 
-current_directory = os.getcwd() + "/"
-
-# Load the audio file
-# meta_data_df = pd.read_csv("metadata.csv", header=None)
-# meta_data_df.head()
-
-file_names=df.columns[0]
-file_names = [file_names] + df[file_names].tolist()
+current_directory = os.getcwd() + "/" 
 IMAGE_DIR='images'
-RELATIVE_AUDIO_DIR='target_voice'
-# for dir in ['target_voice','other_voice']:
 
 if not os.path.exists(IMAGE_DIR) and  not os.path.isdir(IMAGE_DIR):
     os.mkdir(IMAGE_DIR)
-    os.mkdir(f'{IMAGE_DIR}/target_voice')
+    os.mkdir(f'{IMAGE_DIR}/target_voice/')
     os.mkdir(f'{IMAGE_DIR}/other_voice')
-for file_name in file_names:
+for index in range(len(df)):
     try:
-        AUDIO_FILE = f'{current_directory}{file_name}'
+        AUDIO_FILE = f'{current_directory}/{df.loc[index, "relative_path"]}'
         aud = AudioUtil.open(AUDIO_FILE)
 
         sample_rate = 44100
@@ -92,7 +83,7 @@ for file_name in file_names:
         shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)
         sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
         aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
-        spectrogram_file_name=f"{IMAGE_DIR}/{file_name}.png"
+        spectrogram_file_name=f'{current_directory}/{IMAGE_DIR}/{df.loc[index, "relative_path"]}.png'
         plot_spectrogram(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
     except Exception as e:
         print(f"An error occured: {e}")
