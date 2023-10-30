@@ -2,4 +2,4 @@
 **/*.wav
 **/*.mp3
 *.zip
-/__pycache__
+__pycache__/*
