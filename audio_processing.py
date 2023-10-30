@@ -66,10 +66,14 @@ if not os.path.exists(f'{IMAGE_DIR}/target_voice') and  not os.path.isdir(f'{IMA
     os.mkdir(f'{IMAGE_DIR}/target_voice')
 if not os.path.exists(f'{IMAGE_DIR}/other_voice') and  not os.path.isdir(f'{IMAGE_DIR}/other_voice'):
     os.mkdir(f'{IMAGE_DIR}/other_voice')
+
+if not os.path.exists(APP_IMAGE_DIR) and  not os.path.isdir(APP_IMAGE_DIR):
+    os.mkdir(APP_IMAGE_DIR)
 if not os.path.exists(f'{APP_IMAGE_DIR}/target_voice') and  not os.path.isdir(f'{APP_IMAGE_DIR}/target_voice'):
     os.mkdir(f'{APP_IMAGE_DIR}/target_voice')
 if not os.path.exists(f'{APP_IMAGE_DIR}/other_voice') and  not os.path.isdir(f'{APP_IMAGE_DIR}/other_voice'):
     os.mkdir(f'{APP_IMAGE_DIR}/other_voice')
+
 for index in range(len(df)):
     try:
         AUDIO_FILE = f'{current_directory}/{df.loc[index, "relative_path"]}'
