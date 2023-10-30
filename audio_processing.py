@@ -45,19 +45,35 @@ def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None, file_name
     plt.close()
 
 
-# Load the audio file
-meta_data_df = pd.read_csv("audio/other_voice/meta_data.csv", header=None)
-meta_data_df.head()
 
-file_names=meta_data_df.columns[0]
-file_names = [file_names] + meta_data_df[file_names].tolist()
-IMAGE_DIR='images2'
+# Read metadata file
+metadata_file = 'metadata.csv'
+df = pd.read_csv(metadata_file)
+df.head()
+
+# Take relevant columns
+df = df[['relative_path', 'classID']]
+df.head()
+
+current_directory = os.getcwd() + "/"
+
+# Load the audio file
+# meta_data_df = pd.read_csv("metadata.csv", header=None)
+# meta_data_df.head()
+
+file_names=df.columns[0]
+file_names = [file_names] + df[file_names].tolist()
+IMAGE_DIR='images'
+RELATIVE_AUDIO_DIR='target_voice'
+# for dir in ['target_voice','other_voice']:
 
 if not os.path.exists(IMAGE_DIR) and  not os.path.isdir(IMAGE_DIR):
     os.mkdir(IMAGE_DIR)
+    os.mkdir(f'{IMAGE_DIR}/target_voice')
+    os.mkdir(f'{IMAGE_DIR}/other_voice')
 for file_name in file_names:
     try:
-        AUDIO_FILE = f'/home/daniel/git/machine_learning_voice_recognition/audio/other_voice/{file_name}'
+        AUDIO_FILE = f'{current_directory}{file_name}'
         aud = AudioUtil.open(AUDIO_FILE)
 
         sample_rate = 44100
