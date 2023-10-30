@@ -3,3 +3,4 @@
 **/*.png
 **/*.wav
 **/*.mp3
+display/node_modules
