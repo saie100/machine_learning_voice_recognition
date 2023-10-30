@@ -1,2 +1,5 @@
-/target_voice
-/other_voice
+
+
+**/*.png
+**/*.wav
+**/*.mp3
