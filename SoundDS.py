@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader, Dataset, random_split
 from AudioUtil import AudioUtil
 import torchaudio
-
+import random
 
 # ----------------------------
 # Sound Dataset
@@ -13,7 +13,7 @@ class SoundDS(Dataset):
     self.duration = 4000
     self.sr = 44100
     self.channel = 2
-    self.shift_pct = 0.4
+    self.shift_pct = 0
             
   # ----------------------------
   # Number of items in dataset
@@ -27,6 +27,7 @@ class SoundDS(Dataset):
   def __getitem__(self, idx):
     # Absolute file path of the audio file - concatenate the audio directory with
     # the relative path
+    
     audio_file = self.data_path + self.df.loc[idx, 'relative_path']
     # Get the Class ID
     class_id = self.df.loc[idx, 'classID']
@@ -40,9 +41,12 @@ class SoundDS(Dataset):
     reaud = AudioUtil.resample(aud, self.sr)
     rechan = AudioUtil.rechannel(reaud, self.channel)
 
-    dur_aud = AudioUtil.pad_trunc(rechan, self.duration)
+    noise_aud=AudioUtil.add_noise(rechan,0.01)
+    dur_aud = AudioUtil.pad_trunc(noise_aud, self.duration)
+    # shift_aud = AudioUtil.time_shift(dur_aud, self.shift_pct)
     shift_aud = AudioUtil.time_shift(dur_aud, self.shift_pct)
-    sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
+
+    sgram = AudioUtil.spectro_gram(shift_aud, n_mels=80, n_fft=1024, hop_len=12)
     aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=2, n_time_masks=2)
 
     return aug_sgram, class_id

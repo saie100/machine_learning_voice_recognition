@@ -4,3 +4,5 @@
 display/node_modules
 *.zip
 __pycache__/*
+**/*.flac
+**/*.trans.txt

@@ -82,6 +82,16 @@ class AudioUtil():
 
 
   # ----------------------------
+  # Shifts the pitch/amplitude up or down by some percent.
+  # ----------------------------
+  @staticmethod
+  def pitch_shift(aud, shift_limit):
+    sig,sr = aud
+    _, sig_len = sig.shape
+    shift_amt = int(random.random() * shift_limit * sig_len)
+    return (sig.roll(shift_amt), sr)
+  
+    # ----------------------------
   # Shifts the signal to the left or right by some percent. Values at the end
   # are 'wrapped around' to the start of the transformed signal.
   # ----------------------------
@@ -91,6 +101,11 @@ class AudioUtil():
     _, sig_len = sig.shape
     shift_amt = int(random.random() * shift_limit * sig_len)
     return (sig.roll(shift_amt), sr)
+
+  def add_noise(aud, noise_level=0.05):
+    sig,sr = aud
+    noise = torch.randn_like(sig) * noise_level
+    return (sig + noise,sr)
 
   # ----------------------------
   # Generate a Spectrogram
@@ -106,6 +121,7 @@ class AudioUtil():
     # Convert to decibels
     spec = transforms.AmplitudeToDB(top_db=top_db)(spec)
     return (spec)
+
 
 
   # ----------------------------
