@@ -57,12 +57,26 @@ function loadImagesFromDirectory(directory) {
         })
 }
 
-document.getElementById('linkTargetVoice').addEventListener('click', function (e) {
-    e.preventDefault()
-    loadImagesFromDirectory('target_voice')
-})
+// document.getElementById('linkTargetVoice').addEventListener('click', function (e) {
+//     e.preventDefault()
+//     loadImagesFromDirectory('target_voice')
+// })
 
-document.getElementById('linkOtherVoice').addEventListener('click', function (e) {
-    e.preventDefault()
-    loadImagesFromDirectory('other_voice')
-})
+// document.getElementById('linkOtherVoice').addEventListener('click', function (e) {
+//     e.preventDefault()
+//     loadImagesFromDirectory('other_voice')
+// })
+
+// document.getElementById('linkOtherOsrVoice').addEventListener('click', function (e) {
+//     e.preventDefault()
+//     loadImagesFromDirectory('other_voice_osr')
+// })
+
+// document.getElementById('linkOtherOsrVoice').addEventListener('click', function (e) {
+//     e.preventDefault()
+//     loadImagesFromDirectory('other_voice_osr')
+// })
+
+const handleDirChange = (dir) => {
+    loadImagesFromDirectory(dir)
+}

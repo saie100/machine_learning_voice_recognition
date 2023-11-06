@@ -10,8 +10,15 @@
 
 <body>
     <div class="directory-links">
-        <button id="linkTargetVoice">Target Voice</button>
+        <!-- <button id="linkTargetVoice">Target Voice</button>
         <button id="linkOtherVoice">Other Voice</button>
+        <button id="linkTargetOsrVoice">Target OSR Voice</button>
+        <button id="linkOtherOsrVoice">Other OSR Voice</button> -->
+
+        <button onclick="handleDirChange('target_voice')">Target Voice</button>
+        <button onclick="handleDirChange('other_voice')">Other Voice</button>
+        <button onclick="handleDirChange('target_voice_osr')">Target OSR Voice</button>
+        <button onclick="handleDirChange('other_voice_osr')">Other OSR Voice</button>
     </div>
 
     <div class="gallery" id="imageGallery">

@@ -21,7 +21,7 @@ app.get('/image-list', (req, res) => {
     const dirParam = req.query.dir
 
     // Ensure the directory parameter is one of the allowed values
-    if (!['target_voice', 'other_voice'].includes(dirParam)) {
+    if (!['target_voice', 'other_voice', 'other_voice_osr', 'target_voice_osr'].includes(dirParam)) {
         return res.status(400).json({ error: 'Invalid directory' })
     }
     const dirPath = path.join(IMAGES_DIRECTORY, dirParam)
@@ -41,7 +41,7 @@ app.get('/image', (req, res) => {
     const dirParam = req.query.dir
     const fileParam = req.query.file
 
-    if (!['target_voice', 'other_voice'].includes(dirParam)) {
+    if (!['target_voice', 'other_voice', 'other_voice_osr', 'target_voice_osr'].includes(dirParam)) {
         return res.status(400).json({ error: 'Invalid directory' })
     }
 
