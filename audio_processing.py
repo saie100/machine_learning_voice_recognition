@@ -1,20 +1,20 @@
+import os
 import torch
 import librosa
+import webrtcvad
 import torchaudio
 import numpy as np
+import pandas as pd
 import librosa.display
 from AudioUtil import AudioUtil
 import matplotlib.pyplot as plt
 from IPython.display import Audio
 import torchaudio.functional as F
 import torchaudio.transforms as T
+from scipy.io.wavfile import write
 from sklearn import preprocessing
 from matplotlib import interactive
 from matplotlib.patches import Rectangle
-import pandas as pd
-import os
-
-
 
 def plot_waveform(waveform, sr, title="Waveform", ax=None):
     waveform = waveform.numpy()
@@ -31,6 +31,7 @@ def plot_waveform(waveform, sr, title="Waveform", ax=None):
 
 def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None, file_name='images/spectrogram.png'):
     num_channels = specgram.shape[0]
+    
     if ax is None:
         _, ax = plt.subplots(num_channels, 1, figsize=(10, 4*num_channels))
     if num_channels == 1:
@@ -44,7 +45,53 @@ def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None, file_name
     plt.savefig(file_name)
     plt.close()
 
+######################### THE CODE BELOW PROCESSES RAW AUDIO FILES AND STORES THEM AS .WAV FILE IN PROCESSED_AUDIO FOLDER ###########################################
+# Read metadata file
+metadata_file = 'training_metadata.csv'
+df = pd.read_csv(metadata_file)
+df.head()
 
+# Take relevant columns
+df = df[['relative_path', 'classID']]
+df.head()
+
+current_directory = os.getcwd()
+PROCESS_DIR='processed_audio'
+
+vad = webrtcvad.Vad(3)
+if not os.path.exists(PROCESS_DIR) and  not os.path.isdir(PROCESS_DIR):
+    os.mkdir(PROCESS_DIR)
+    os.mkdir(f'{PROCESS_DIR}/target_voice/')
+    os.mkdir(f'{PROCESS_DIR}/other_voice')
+for index in range(len(df)):
+    try:
+        AUDIO_FILE = f'{current_directory}/{df.loc[index, "relative_path"]}'
+        aud, sr = AudioUtil.open(AUDIO_FILE)
+        
+        frame_duration = 10 # 10 ms, 20 ms, 30 ms
+        process_sample_rate = 8000 # 8000 Hz, 16000 Hz, 32000 Hz
+        frame_size = int(frame_duration * process_sample_rate / 1000)
+
+        audio_len = len(aud[0])
+        num_of_frames = int(audio_len / frame_size)
+
+        processed_audio_out_file =f'{current_directory}/{PROCESS_DIR}/{df.loc[index, "relative_path"]}'
+        output_wav = []
+        for index in range(num_of_frames):
+            is_speech = vad.is_speech(aud[0][index*frame_size : (index*frame_size) + frame_size ].numpy().tobytes(), process_sample_rate)
+            if(is_speech):
+                voice_data = aud[0][index*frame_size : (index*frame_size) + frame_size ].numpy()
+                for item in voice_data:
+                    output_wav.append(item)
+        
+        write(processed_audio_out_file, sr, np.array(output_wav))
+
+    except Exception as e:
+        print(f"An error occured: {e}")
+
+
+######################### THE CODE BELOW SAVE AUDIO AS IMAGE FOR FEATURE INSPECTION ###########################################
+"""
 
 # Read metadata file
 metadata_file = 'metadata.csv'
@@ -84,25 +131,7 @@ for index in range(len(df)):
         sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
         aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
         spectrogram_file_name=f'{current_directory}/{IMAGE_DIR}/{df.loc[index, "relative_path"]}.png'
-        plot_spectrogram(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
+        #plot_spectrogram(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
+        plot_entropy(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
     except Exception as e:
-        print(f"An error occured: {e}")
-
-
-"""fig1 = plt.figure(1)
-librosa.display.waveshow(aug_sgram, sr=sample_rate)
-
-fig2 = plt.figure(2)
-mfcc = librosa.feature.mfcc(y=aug_sgram, sr=sample_rate)
-# Center MFCC coefficient dimensions to the mean and unit variance
-mfcc = preprocessing.scale(mfcc, axis=1)
-librosa.display.specshow(mfcc, sr=sample_rate, x_axis='time')
-
-fig3 = plt.figure(3)
-sgram = librosa.stft(aug_sgram)
-sgram_mag, _ = librosa.magphase(sgram)
-mel_scale_sgram = librosa.feature.melspectrogram(S=sgram_mag, sr=sample_rate)
-mel_db = librosa.amplitude_to_db(mel_scale_sgram, ref=np.min)
-librosa.display.specshow(mel_db, sr=sample_rate, x_axis='time', y_axis='mel')
-plt.colorbar(format='%+2.0f dB')
-plt.show()"""
+        print(f"An error occured: {e}")"""
