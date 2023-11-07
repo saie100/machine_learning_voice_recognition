@@ -140,7 +140,7 @@ def training(model, train_dl, num_epochs):
         avg_loss = running_loss / num_batches
         acc = correct_prediction / total_prediction
         print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
-    # torch.save(model.state.dict(), "osr_model.pth")
+    torch.save(model, "osr_model.pt")
 
     print("Finished Training")
 
@@ -197,10 +197,12 @@ def main(metadata_file):
     num_train = round(num_items * 0.8)
     num_val = num_items - num_train
     train_ds, val_ds = random_split(myds, [num_train, num_val])
+    print(val_ds)
+    print(train_ds)
 
     # Create training and validation data loaders
-    train_dl = torch.utils.data.DataLoader(train_ds, batch_size=1, shuffle=True)
-    val_dl = torch.utils.data.DataLoader(val_ds, batch_size=1, shuffle=False)
+    train_dl = torch.utils.data.DataLoader(train_ds, batch_size=32, shuffle=True)
+    val_dl = torch.utils.data.DataLoader(val_ds, batch_size=32, shuffle=False)
 
     # Create the model and put it on the GPU if available
     myModel = AudioClassifier()

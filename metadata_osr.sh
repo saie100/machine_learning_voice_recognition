@@ -24,12 +24,12 @@ find . -type f -name "*.flac" | while read -r file; do
     fi
 
     # Write the relative file path and mapped class ID to the meta_data.csv file
-    if [[ ${classID_map[$reader_id]} -lt 9 ]]; then
+    if [[ ${classID_map[$reader_id]} -lt 3 ]]; then
         # Write the relative file path and mapped class ID to the meta_data.csv file
         # echo "other_voice_osr/${file:2},${classID_map[$reader_id]}" >> ../metadata_osr.csv
         echo "other_voice_osr/${file:2},0" >> ../metadata_osr.csv
-
     fi
+    # echo "other_voice_osr/${file:2},0" >> ../metadata_osr.csv
     # echo "other_voice_osr/${file:2},${classID_map[$reader_id]}" >> ../metadata_osr.csv
 done
 
