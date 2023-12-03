@@ -72,7 +72,7 @@ def plot_spectrogram(
 
 ######################### THE CODE BELOW PROCESSES RAW AUDIO FILES AND STORES THEM AS .WAV FILE IN PROCESSED_AUDIO FOLDER ###########################################
 # Read metadata file
-metadata_file = "training_metadata.csv"
+metadata_file = "metadata_osr.csv"
 df = pd.read_csv(metadata_file)
 df.head()
 
@@ -86,11 +86,13 @@ PROCESS_DIR = "processed_audio"
 vad = webrtcvad.Vad(3)
 if not os.path.exists(PROCESS_DIR) and not os.path.isdir(PROCESS_DIR):
     os.mkdir(PROCESS_DIR)
-    os.mkdir(f"{PROCESS_DIR}/target_voice/")
-    os.mkdir(f"{PROCESS_DIR}/other_voice")
+    os.mkdir(f"{PROCESS_DIR}/target_voice_new/")
+    os.mkdir(f"{PROCESS_DIR}/other_voice_osr/")
 for index in range(len(df)):
     try:
         AUDIO_FILE = f'{current_directory}/{df.loc[index, "relative_path"]}'
+        print(f"{index+1}/{len(df)}  {round(100*(index+1)/len(df),2)}%")
+        # print(AUDIO_FILE)
         aud, sr = AudioUtil.open(AUDIO_FILE)
 
         frame_duration = 10  # 10 ms, 20 ms, 30 ms
@@ -121,7 +123,7 @@ for index in range(len(df)):
         write(processed_audio_out_file, sr, np.array(output_wav))
 
     except Exception as e:
-        print(f"An error occured: {e}")
+        print(f"An error ocurred: {e}")
 
 
 ######################### THE CODE BELOW SAVE AUDIO AS IMAGE FOR FEATURE INSPECTION ###########################################

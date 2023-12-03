@@ -33,31 +33,41 @@ class AudioClassifier(nn.Module):
 
         # Second Convolution Block
         self.conv2 = nn.Conv2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
-        self.relu2 = nn.ReLU()
+        self.relu2 = nn.Tanh()
         self.bn2 = nn.BatchNorm2d(16)
         init.kaiming_normal_(self.conv2.weight, a=0.1)
         self.conv2.bias.data.zero_()
         conv_layers += [self.conv2, self.relu2, self.bn2]
 
-        # Second Convolution Block
+        # Third Convolution Block
         self.conv3 = nn.Conv2d(
             16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )
-        self.relu3 = nn.ReLU()
+        self.relu3 = nn.Tanh()
         self.bn3 = nn.BatchNorm2d(32)
         init.kaiming_normal_(self.conv3.weight, a=0.1)
         self.conv3.bias.data.zero_()
         conv_layers += [self.conv3, self.relu3, self.bn3]
 
-        # Second Convolution Block
+        # Fourth Convolution Block
         self.conv4 = nn.Conv2d(
             32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )
-        self.relu4 = nn.ReLU()
+        self.relu4 = nn.Tanh()
         self.bn4 = nn.BatchNorm2d(64)
         init.kaiming_normal_(self.conv4.weight, a=0.1)
         self.conv4.bias.data.zero_()
         conv_layers += [self.conv4, self.relu4, self.bn4]
+
+        # Fifth Convolution Block
+        self.conv5 = nn.Conv2d(
+            32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
+        )
+        self.relu5 = nn.Tanh()
+        self.bn5 = nn.BatchNorm2d(64)
+        init.kaiming_normal_(self.conv5.weight, a=0.1)
+        self.conv5.bias.data.zero_()
+        conv_layers += [self.conv5, self.relu5, self.bn5]
 
         # Linear Classifier
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
@@ -87,7 +97,7 @@ class AudioClassifier(nn.Module):
 # ----------------------------
 # Training Loop
 # ----------------------------
-def training(model, train_dl, num_epochs):
+def training(model, train_dl, num_epochs, delta):
     # Loss Function, Optimizer and Scheduler
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -98,7 +108,7 @@ def training(model, train_dl, num_epochs):
         epochs=num_epochs,
         anneal_strategy="linear",
     )
-
+    prev_loss = 0.0
     # Repeat for each epoch
     for epoch in range(num_epochs):
         running_loss = 0.0
@@ -132,17 +142,29 @@ def training(model, train_dl, num_epochs):
             correct_prediction += (prediction == labels).sum().item()
             total_prediction += prediction.shape[0]
 
-            # if i % 10 == 0:    # print every 10 mini-batches
-            #    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 10))
-
         # Print stats at the end of the epoch
         num_batches = len(train_dl)
         avg_loss = running_loss / num_batches
         acc = correct_prediction / total_prediction
         print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
-    torch.save(model, "osr_model.pt")
+        if abs(avg_loss - prev_loss) < delta:
+            break
+        prev_loss = avg_loss
+
+    torch.save(model, "osr_model_4.pt")
 
     print("Finished Training")
+
+
+def running_average(sequence):
+    total = 0
+    averages = []
+
+    for i, number in enumerate(sequence, start=1):
+        total += number
+        averages.append(total / i)
+
+    return averages[-1]
 
 
 def main():
@@ -151,7 +173,7 @@ def main():
     # ----------------------------
 
     # Read metadata file
-    metadata_file = "training_metadata.csv"
+    metadata_file = "metadata_osr.csv"
     df = pd.read_csv(metadata_file)
     df.head()
 
@@ -159,7 +181,7 @@ def main():
     df = df[["relative_path", "classID"]]
     df.head()
 
-    current_directory = os.getcwd() + "/processed_audio/"
+    current_directory = os.getcwd() + "/unprocessed_audio/"
     myds = SoundDS(df, current_directory)
 
     # Create training data loaders
@@ -176,10 +198,11 @@ def main():
     num_epochs = (
         25  # increase num of epochs until there isn't much change in validation loss
     )
-    training(myModel, train_dl, num_epochs)
+    delta = 0.005
+    training(myModel, train_dl, num_epochs, delta)
 
     # save model
-    PATH = "machine_learning_model.pth"
+    PATH = "machine_learning_model_unprocessed_4.pth"
     torch.save(myModel, PATH)
 
 
