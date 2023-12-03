@@ -34,8 +34,8 @@ def inference (model, val_dl):
       # Get the predicted class with the highest score
       _, prediction = torch.max(outputs,1)
       
-      print(prediction)
-      print(labels)
+      print(f"\n\nMODEL PREDICTS: {prediction}")
+      print(f"LABEL MARKERD AS: {labels}\n\n")
 
       # Count of predictions that matched the target label
       correct_prediction += (prediction == labels).sum().item()
