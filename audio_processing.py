@@ -15,35 +15,60 @@ from scipy.io.wavfile import write
 from sklearn import preprocessing
 from matplotlib import interactive
 from matplotlib.patches import Rectangle
+import pandas as pd
+import os
 
-def plot_waveform(waveform, sr, title="Waveform", ax=None):
+run_waveform = False
+
+
+def plot_waveform(
+    waveform, sr, title="Waveform", ax=None, file_name="images/waveform.png"
+):
     waveform = waveform.numpy()
-
     num_channels, num_frames = waveform.shape
     time_axis = torch.arange(0, num_frames) / sr
-
     if ax is None:
-        _, ax = plt.subplots(num_channels, 1)
-    ax.plot(time_axis, waveform[0], linewidth=1)
-    ax.grid(True)
-    ax.set_xlim([0, time_axis[-1]])
-    ax.set_title(title)
+        _, ax = plt.subplots(num_channels, 1, figsize=(10, 4 * num_channels))
+    if num_channels == 1:
+        ax = [ax]
+    for i in range(num_channels):
+        if title is not None:
+            ax[i].set_title(f"{file_name} - Channel {i+1}")
+        ax[i].set_ylabel("Amplitude")
+        ax[i].plot(time_axis, waveform[i], linewidth=1)
+        # ax[i].imshow(waveform, origin="lower", aspect="auto", interpolation="nearest")
+        ax[i].grid(True)
+        ax[i].set_xlim([0, time_axis[-1]])
+        ax[i].set_title(title)
+    # plt.savefig(file_name)
+    # plt.close()
+    print(f"{file_name} waveform done")
+    return plt
 
-def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None, file_name='images/spectrogram.png'):
+
+def plot_spectrogram(
+    specgram, title=None, ylabel="freq_bin", ax=None, file_name="images/spectrogram.png"
+):
     num_channels = specgram.shape[0]
-    
+
     if ax is None:
-        _, ax = plt.subplots(num_channels, 1, figsize=(10, 4*num_channels))
+        _, ax = plt.subplots(num_channels, 1, figsize=(10, 4 * num_channels))
     if num_channels == 1:
         ax = [ax]
     for i in range(num_channels):
         if title is not None:
             ax[i].set_title(f"{file_name} - Channel {i+1}")
         ax[i].set_ylabel(ylabel)
-        ax[i].imshow(librosa.power_to_db(specgram[i]), origin="lower", aspect="auto", interpolation="nearest")
+        ax[i].imshow(
+            librosa.power_to_db(specgram[i]),
+            origin="lower",
+            aspect="auto",
+            interpolation="nearest",
+        )
     plt.tight_layout()
-    plt.savefig(file_name)
-    plt.close()
+    print(f"{file_name} spectrogram done")
+    return plt
+
 
 
 ## THE CODE BELOW PROCESSES RAW AUDIO FILES AND STORES THEM AS .WAV FILE IN PROCESSED_AUDIO FOLDER
@@ -102,7 +127,15 @@ metadata_files = ['metadata.csv']
 current_directory = os.getcwd() + "/" 
 IMAGE_DIR='images'
 
-if not os.path.exists(IMAGE_DIR) and  not os.path.isdir(IMAGE_DIR):
+current_directory = os.getcwd()
+IMAGE_DIR = "images_osr"
+APP_IMAGE_DIR = "display/images"
+WAVEFORM_DIR = "waveform"
+TARGET_VOICE_DIR = "target_voice"
+OTHER_VOICE_DIR = "other_voice_osr"
+
+# IMAGE Directories
+if not os.path.exists(IMAGE_DIR) and not os.path.isdir(IMAGE_DIR):
     os.mkdir(IMAGE_DIR)
     os.mkdir(f'{IMAGE_DIR}/target_voice')
     os.mkdir(f'{IMAGE_DIR}/other_voice')

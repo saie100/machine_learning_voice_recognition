@@ -12,7 +12,7 @@ from audio_processing import processing
 # ----------------------------
 # Audio Classification Model
 # ----------------------------
-class AudioClassifier (nn.Module):
+class AudioClassifier(nn.Module):
     # ----------------------------
     # Build the model architecture
     # ----------------------------
@@ -37,7 +37,9 @@ class AudioClassifier (nn.Module):
         conv_layers += [self.conv2, self.relu2, self.bn2]
 
         # Second Convolution Block
-        self.conv3 = nn.Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        self.conv3 = nn.Conv2d(
+            16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
+        )
         self.relu3 = nn.ReLU()
         self.bn3 = nn.BatchNorm2d(32)
         init.kaiming_normal_(self.conv3.weight, a=0.1)
@@ -45,7 +47,9 @@ class AudioClassifier (nn.Module):
         conv_layers += [self.conv3, self.relu3, self.bn3]
 
         # Second Convolution Block
-        self.conv4 = nn.Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        self.conv4 = nn.Conv2d(
+            32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
+        )
         self.relu4 = nn.ReLU()
         self.bn4 = nn.BatchNorm2d(64)
         init.kaiming_normal_(self.conv4.weight, a=0.1)
@@ -58,7 +62,7 @@ class AudioClassifier (nn.Module):
 
         # Wrap the Convolutional Blocks
         self.conv = nn.Sequential(*conv_layers)
- 
+
     # ----------------------------
     # Forward pass computations
     # ----------------------------
@@ -75,6 +79,7 @@ class AudioClassifier (nn.Module):
 
         # Final output
         return x
+
 
 # ----------------------------
 # Training Loop
