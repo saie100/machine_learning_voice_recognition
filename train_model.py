@@ -1,14 +1,12 @@
 import os
 import torch
+import pandas as pd
 import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 from torch.nn import init
-from torch.utils.data import random_split
-import pandas as pd
-from pathlib import Path
 from SoundDS import SoundDS
-from AudioUtil import AudioUtil
+from audio_processing import processing
 
 
 # ----------------------------
@@ -81,10 +79,10 @@ class AudioClassifier (nn.Module):
 # ----------------------------
 # Training Loop
 # ----------------------------
-def training(model, train_dl, num_epochs):
+def training(model, train_dl, num_epochs, learning_rate=0.001):
   # Loss Function, Optimizer and Scheduler
   criterion = nn.CrossEntropyLoss()
-  optimizer = torch.optim.Adam(model.parameters(),lr=0.001)
+  optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
   scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.001,
                                                 steps_per_epoch=int(len(train_dl)),
                                                 epochs=num_epochs,
@@ -150,11 +148,14 @@ def main():
   df = df[['relative_path', 'classID']]
   df.head()
 
+  # process the raw data and place it in processed_audio directory
+  processing([metadata_file])
+  
   current_directory = os.getcwd() + "/processed_audio/"
   myds = SoundDS(df, current_directory)
 
   # Create training data loaders
-  train_dl = torch.utils.data.DataLoader(myds, batch_size=4, shuffle=True)
+  train_dl = torch.utils.data.DataLoader(myds, batch_size=8, shuffle=True)
   
   # Create the model and put it on the GPU if available
   myModel = AudioClassifier()
@@ -165,7 +166,8 @@ def main():
   next(myModel.parameters()).device
 
   num_epochs=25   # increase num of epochs until there isn't much change in validation loss
-  training(myModel, train_dl, num_epochs)
+  learning_rate = 0.1
+  training(myModel, train_dl, num_epochs, learning_rate)
 
   # save model 
   PATH = "machine_learning_model.pth"

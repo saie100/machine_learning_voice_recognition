@@ -3,8 +3,8 @@ import torch
 import pandas as pd
 from SoundDS import SoundDS
 from AudioUtil import AudioUtil
-from torch.utils.data import random_split
 from train_model import AudioClassifier
+from audio_processing import processing
 
   
 # ----------------------------
@@ -49,13 +49,16 @@ def main():
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   
   # Read metadata file
-  metadata_file = 'evaluating_metadata.csv'
+  metadata_file = 'metadata.csv'
   df = pd.read_csv(metadata_file)
   df.head()
 
   # Take relevant columns
   df = df[['relative_path', 'classID']]
   df.head()
+
+  # process the raw data and place it in processed_audio directory
+  processing([metadata_file])
 
   current_directory = os.getcwd() + "/processed_audio/"
   myds = SoundDS(df, current_directory)

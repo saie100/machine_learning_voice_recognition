@@ -41,8 +41,8 @@ class SoundDS(Dataset):
     rechan = AudioUtil.rechannel(reaud, self.channel)
 
     dur_aud = AudioUtil.pad_trunc(rechan, self.duration)
-    shift_aud = AudioUtil.time_shift(dur_aud, self.shift_pct)
-    sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
+    #shift_aud = AudioUtil.time_shift(dur_aud, self.shift_pct)
+    sgram = AudioUtil.spectro_gram(dur_aud, n_mels=64, n_fft=1024, hop_len=None)
     aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=2, n_time_masks=2)
 
     return aug_sgram, class_id
