@@ -58,7 +58,7 @@ class AudioClassifier(nn.Module):
 
         # Linear Classifier
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=64, out_features=10)
+        self.lin = nn.Linear(in_features=64, out_features=2)
 
         # Wrap the Convolutional Blocks
         self.conv = nn.Sequential(*conv_layers)
@@ -160,7 +160,7 @@ def main():
   myds = SoundDS(df, current_directory)
 
   # Create training data loaders
-  train_dl = torch.utils.data.DataLoader(myds, batch_size=8, shuffle=True)
+  train_dl = torch.utils.data.DataLoader(myds, batch_size=16, shuffle=True)
   
   # Create the model and put it on the GPU if available
   myModel = AudioClassifier()

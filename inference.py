@@ -49,7 +49,7 @@ def main():
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   
   # Read metadata file
-  metadata_file = 'metadata.csv'
+  metadata_file = 'testing_metadata.csv'
   df = pd.read_csv(metadata_file)
   df.head()
 
