@@ -74,7 +74,7 @@ def _plot_spectrogram(
 
 
 ## THE CODE BELOW PROCESSES RAW AUDIO FILES AND STORES THEM AS .WAV FILE IN PROCESSED_AUDIO FOLDER
-def processing(metadata_files: list):
+def processing(metadata_files: list, plot=True):
     
     current_directory = os.getcwd()
     PROCESS_DIR='processed_audio'
@@ -118,6 +118,9 @@ def processing(metadata_files: list):
 
             except Exception as e:
                 print(f"An error occured: {e}")
+    
+    if plot:
+        plot_spectrogram(metadata_files)
 
 
 ######################### THE CODE BELOW SAVE AUDIO AS IMAGE FOR FEATURE INSPECTION ###########################################
@@ -136,7 +139,7 @@ def plot_spectrogram(metadata_files: list):
         
         for index in range(len(df)):
             try:
-                AUDIO_FILE = f'{current_directory}/{df.loc[index, "relative_path"]}'
+                AUDIO_FILE = f'{current_directory}/processed_audio/{df.loc[index, "relative_path"]}'
                 aud = AudioUtil.open(AUDIO_FILE)
                 
                 sample_rate = 44100
@@ -152,8 +155,8 @@ def plot_spectrogram(metadata_files: list):
                 rechan = AudioUtil.rechannel(reaud, 2)
 
                 dur_aud = AudioUtil.pad_trunc(rechan, duration)
-                #shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)
-                sgram = AudioUtil.spectro_gram(dur_aud, n_mels=64, n_fft=1024, hop_len=None)
+                shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)
+                sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
                 #aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
                 
                 spectrogram_file_name=f'{current_directory}/{IMAGE_DIR}/{df.loc[index, "relative_path"]}.png'

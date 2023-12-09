@@ -5,7 +5,6 @@ import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 from torch.nn import init
-from SoundDS import SoundDS
 from ImageDS import ImageDS
 from audio_processing import processing
 
@@ -18,64 +17,33 @@ class AudioClassifier(nn.Module):
     # ----------------------------
     def __init__(self):
         super().__init__()
-        conv_layers = []
 
-        # First Convolution Block with Relu and Batch Norm. Use Kaiming Initialization
-        self.conv1 = nn.Conv2d(3, 8, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))
-        self.relu1 = nn.ReLU()
-        self.bn1 = nn.BatchNorm2d(8)
-        init.kaiming_normal_(self.conv1.weight, a=0.1)
-        self.conv1.bias.data.zero_()
-        conv_layers += [self.conv1, self.relu1, self.bn1]
-
-        # Second Convolution Block
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
-        self.relu2 = nn.ReLU()
-        self.bn2 = nn.BatchNorm2d(16)
-        init.kaiming_normal_(self.conv2.weight, a=0.1)
-        self.conv2.bias.data.zero_()
-        conv_layers += [self.conv2, self.relu2, self.bn2]
-
-        # Second Convolution Block
-        self.conv3 = nn.Conv2d(
-            16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
-        )
-        self.relu3 = nn.ReLU()
-        self.bn3 = nn.BatchNorm2d(32)
-        init.kaiming_normal_(self.conv3.weight, a=0.1)
-        self.conv3.bias.data.zero_()
-        conv_layers += [self.conv3, self.relu3, self.bn3]
-
-        # Second Convolution Block
-        self.conv4 = nn.Conv2d(
-            32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
-        )
-        self.relu4 = nn.ReLU()
-        self.bn4 = nn.BatchNorm2d(64)
-        init.kaiming_normal_(self.conv4.weight, a=0.1)
-        self.conv4.bias.data.zero_()
-        conv_layers += [self.conv4, self.relu4, self.bn4]
-
-        # Linear Classifier
-        self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=64, out_features=2)
-
-        # Wrap the Convolutional Blocks
-        self.conv = nn.Sequential(*conv_layers)
+        # Convolutional Layer
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5, stride=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1)
+        
+        # Linear Layer
+        self.fc1 = nn.Linear(16 * 394 * 494, 5)
+        self.fc2 = nn.Linear(5, 84)
+        self.fc3 = nn.Linear(84, 2)
 
     # ----------------------------
     # Forward pass computations
     # ----------------------------
     def forward(self, x):
-        # Run the convolutional blocks
-        x = self.conv(x)
+        # Run the convolutional layer
+        x = F.relu(self.conv1(x))
+        x = self.pool(x)
+        x = F.relu(self.conv2(x))
 
-        # Adaptive pool and flatten for input to linear layer
-        x = self.ap(x)
+        # flatten for input to linear layer
         x = x.view(x.shape[0], -1)
 
         # Linear layer
-        x = self.lin(x)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x) 
 
         # Final output
         return x
@@ -153,13 +121,13 @@ def main():
   df = df[['relative_path', 'classID']]
   df.head()
 
-  # process the raw data and place it in processed_audio directory
-  #processing([metadata_file])
-  #plot_spectrogram([processing_metadata])
+  # process the raw data and place it in images directory
+  processing([metadata_file], True)
 
-  #current_directory = os.getcwd() + "/processed_audio/"
+  df['relative_path'] = df['relative_path'].str.replace('.wav', '.wav.png', regex=False)
+  df['relative_path'] = df['relative_path'].str.replace('.flac', '.flav.png', regex=False)
+
   current_directory = os.getcwd() + "/images/"
-  #myds = SoundDS(df, current_directory)
   myds = ImageDS(df, current_directory)
 
   # Create training data loaders
@@ -173,7 +141,7 @@ def main():
   # Check that it is on Cuda
   next(myModel.parameters()).device
 
-  num_epochs=25   # increase num of epochs until there isn't much change in validation loss
+  num_epochs=12   # increase num of epochs until there isn't much change in validation loss
   learning_rate = 0.2
   training(myModel, train_dl, num_epochs, learning_rate)
 

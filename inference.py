@@ -1,12 +1,10 @@
 import os
 import torch
 import pandas as pd
-from SoundDS import SoundDS
 from ImageDS import ImageDS
 from AudioUtil import AudioUtil
 from train_model import AudioClassifier
 from audio_processing import processing
-from audio_processing import plot_spectrogram
   
 # ----------------------------
 # Inference
@@ -55,7 +53,7 @@ def main():
   
   # Read metadata file
   metadata_file = 'testing_metadata.csv'
-  processing_metadata = 'processing_metadata.csv'
+
   df = pd.read_csv(metadata_file)
   df.head()
 
@@ -63,12 +61,13 @@ def main():
   df = df[['relative_path', 'classID']]
   df.head()
 
-  # process the raw data and place it in processed_audio directory
+  # process the raw data and place it in images directory
   #processing([metadata_file])
-  #plot_spectrogram([processing_metadata])
+  
+  df['relative_path'] = df['relative_path'].str.replace('.wav', '.wav.png', regex=False)
+  df['relative_path'] = df['relative_path'].str.replace('.flac', '.flav.png', regex=False)
 
   current_directory = os.getcwd() + "/images/"
-  #myds = SoundDS(df, current_directory)
   myds = ImageDS(df, current_directory)
 
   # Create validation data loaders and load model

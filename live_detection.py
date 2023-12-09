@@ -4,7 +4,7 @@ import torch
 import wave
 import pyaudio
 import pandas as pd
-from SoundDS import SoundDS
+from ImageDS import ImageDS
 from AudioUtil import AudioUtil
 from torch.utils.data import random_split
 from train_model import AudioClassifier
@@ -124,15 +124,18 @@ def main():
     df.head()
 
     # get live recording from user
-    getLiveRecording(num_of_runs=2)
+    getLiveRecording(num_of_runs=1)
     # process the raw data and place it in processed_audio directory
     processing([metadata_file])
 
-    current_directory = os.getcwd() + "/processed_audio/"
-    myds = SoundDS(df, current_directory)
+    df['relative_path'] = df['relative_path'].str.replace('.wav', '.wav.png', regex=False)
+    df['relative_path'] = df['relative_path'].str.replace('.flac', '.flav.png', regex=False)
+
+    current_directory = os.getcwd() + "/images/"
+    myds = ImageDS(df, current_directory)
 
     # Create validation data loaders and load model
-    val_dl = torch.utils.data.DataLoader(myds, batch_size=2, shuffle=False)
+    val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=False)
     PATH = "machine_learning_model.pth"
     model = torch.load(PATH)
 
