@@ -48,7 +48,7 @@ def plot_waveform(
 
 def _plot_spectrogram(
     specgram, title=None, ylabel="freq_bin", ax=None, file_name="images/spectrogram.png"
-):
+):  
     num_channels = specgram.shape[0]
 
     if ax is None:
@@ -66,8 +66,10 @@ def _plot_spectrogram(
             interpolation="nearest",
         )
     plt.tight_layout()
+    plt.savefig(file_name)
     print(f"{file_name} spectrogram done")
-    return plt
+    plt.close()
+    #return plt
 
 
 
@@ -121,7 +123,7 @@ def processing(metadata_files: list):
 ######################### THE CODE BELOW SAVE AUDIO AS IMAGE FOR FEATURE INSPECTION ###########################################
 def plot_spectrogram(metadata_files: list):
     # Read metadata file
-    current_directory = os.getcwd() + "/" 
+    current_directory = os.getcwd()
     IMAGE_DIR='images'    
 
     for metadata_file in metadata_files:
@@ -147,7 +149,7 @@ def plot_spectrogram(metadata_files: list):
                 # result in arrays of different lengths, even though the sound duration is
                 # the same.
                 reaud = AudioUtil.resample(aud, sample_rate)
-                rechan = AudioUtil.rechannel(reaud, channel)
+                rechan = AudioUtil.rechannel(reaud, 2)
 
                 dur_aud = AudioUtil.pad_trunc(rechan, duration)
                 #shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)

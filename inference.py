@@ -2,10 +2,11 @@ import os
 import torch
 import pandas as pd
 from SoundDS import SoundDS
+from ImageDS import ImageDS
 from AudioUtil import AudioUtil
 from train_model import AudioClassifier
 from audio_processing import processing
-
+from audio_processing import plot_spectrogram
   
 # ----------------------------
 # Inference
@@ -30,6 +31,10 @@ def inference (model, val_dl):
       # Get the predicted class with the highest score
       _, prediction = torch.max(outputs,1)
       # Count of predictions that matched the target label
+      
+      print(f"\n\nMODEL PREDICTS: {prediction}")
+      print(f"LABEL MARKERD AS: {labels}\n\n")
+
       correct_prediction += (prediction == labels).sum().item()
       total_prediction += prediction.shape[0]
     
@@ -50,6 +55,7 @@ def main():
   
   # Read metadata file
   metadata_file = 'testing_metadata.csv'
+  processing_metadata = 'processing_metadata.csv'
   df = pd.read_csv(metadata_file)
   df.head()
 
@@ -58,13 +64,15 @@ def main():
   df.head()
 
   # process the raw data and place it in processed_audio directory
-  processing([metadata_file])
+  #processing([metadata_file])
+  #plot_spectrogram([processing_metadata])
 
-  current_directory = os.getcwd() + "/processed_audio/"
-  myds = SoundDS(df, current_directory)
+  current_directory = os.getcwd() + "/images/"
+  #myds = SoundDS(df, current_directory)
+  myds = ImageDS(df, current_directory)
 
   # Create validation data loaders and load model
-  val_dl = torch.utils.data.DataLoader(myds, batch_size=4, shuffle=True)
+  val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=False)
   PATH = "machine_learning_model.pth"
   model = torch.load(PATH)
 

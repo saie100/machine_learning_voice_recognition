@@ -6,8 +6,8 @@ from torch.nn import init
 import torch.nn.functional as F
 from torch.nn import init
 from SoundDS import SoundDS
+from ImageDS import ImageDS
 from audio_processing import processing
-
 
 # ----------------------------
 # Audio Classification Model
@@ -21,7 +21,7 @@ class AudioClassifier(nn.Module):
         conv_layers = []
 
         # First Convolution Block with Relu and Batch Norm. Use Kaiming Initialization
-        self.conv1 = nn.Conv2d(2, 8, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))
+        self.conv1 = nn.Conv2d(3, 8, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))
         self.relu1 = nn.ReLU()
         self.bn1 = nn.BatchNorm2d(8)
         init.kaiming_normal_(self.conv1.weight, a=0.1)
@@ -88,7 +88,7 @@ def training(model, train_dl, num_epochs, learning_rate=0.001):
   # Loss Function, Optimizer and Scheduler
   criterion = nn.CrossEntropyLoss()
   optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
-  scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.001,
+  scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01,
                                                 steps_per_epoch=int(len(train_dl)),
                                                 epochs=num_epochs,
                                                 anneal_strategy='linear')
@@ -107,7 +107,7 @@ def training(model, train_dl, num_epochs, learning_rate=0.001):
         # Normalize the inputs
         inputs_m, inputs_s = inputs.mean(), inputs.std()
         inputs = (inputs - inputs_m) / inputs_s
-
+        #print(inputs.shape)
         # Zero the parameter gradients
         optimizer.zero_grad()
 
@@ -154,10 +154,13 @@ def main():
   df.head()
 
   # process the raw data and place it in processed_audio directory
-  processing([metadata_file])
-  
-  current_directory = os.getcwd() + "/processed_audio/"
-  myds = SoundDS(df, current_directory)
+  #processing([metadata_file])
+  #plot_spectrogram([processing_metadata])
+
+  #current_directory = os.getcwd() + "/processed_audio/"
+  current_directory = os.getcwd() + "/images/"
+  #myds = SoundDS(df, current_directory)
+  myds = ImageDS(df, current_directory)
 
   # Create training data loaders
   train_dl = torch.utils.data.DataLoader(myds, batch_size=16, shuffle=True)
@@ -171,7 +174,7 @@ def main():
   next(myModel.parameters()).device
 
   num_epochs=25   # increase num of epochs until there isn't much change in validation loss
-  learning_rate = 0.1
+  learning_rate = 0.2
   training(myModel, train_dl, num_epochs, learning_rate)
 
   # save model 

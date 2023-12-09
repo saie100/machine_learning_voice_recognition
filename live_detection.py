@@ -124,7 +124,7 @@ def main():
     df.head()
 
     # get live recording from user
-    getLiveRecording(num_of_runs=1)
+    getLiveRecording(num_of_runs=2)
     # process the raw data and place it in processed_audio directory
     processing([metadata_file])
 
@@ -132,7 +132,7 @@ def main():
     myds = SoundDS(df, current_directory)
 
     # Create validation data loaders and load model
-    val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=False)
+    val_dl = torch.utils.data.DataLoader(myds, batch_size=2, shuffle=False)
     PATH = "machine_learning_model.pth"
     model = torch.load(PATH)
 
