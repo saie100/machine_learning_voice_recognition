@@ -1,15 +1,11 @@
 import os
 import torch
+import pandas as pd
 import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 from torch.nn import init
-from torch.utils.data import random_split
-import pandas as pd
-from pathlib import Path
 from SoundDS import SoundDS
-from AudioUtil import AudioUtil
-import sys
 
 
 # ----------------------------
@@ -33,45 +29,35 @@ class AudioClassifier(nn.Module):
 
         # Second Convolution Block
         self.conv2 = nn.Conv2d(8, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
-        self.relu2 = nn.Tanh()
+        self.relu2 = nn.ReLU()
         self.bn2 = nn.BatchNorm2d(16)
         init.kaiming_normal_(self.conv2.weight, a=0.1)
         self.conv2.bias.data.zero_()
         conv_layers += [self.conv2, self.relu2, self.bn2]
 
-        # Third Convolution Block
+        # 3 Convolution Block
         self.conv3 = nn.Conv2d(
             16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )
-        self.relu3 = nn.Tanh()
+        self.relu3 = nn.ReLU()
         self.bn3 = nn.BatchNorm2d(32)
         init.kaiming_normal_(self.conv3.weight, a=0.1)
         self.conv3.bias.data.zero_()
         conv_layers += [self.conv3, self.relu3, self.bn3]
 
-        # Fourth Convolution Block
+        # 4 Convolution Block
         self.conv4 = nn.Conv2d(
             32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
         )
-        self.relu4 = nn.Tanh()
+        self.relu4 = nn.ReLU()
         self.bn4 = nn.BatchNorm2d(64)
-        init.kaiming_normal_(self.conv4.weight, a=0.1)
+        init.kaiming_normal_(self.conv4.weight, a=0.0)
         self.conv4.bias.data.zero_()
         conv_layers += [self.conv4, self.relu4, self.bn4]
 
-        # Fifth Convolution Block
-        self.conv5 = nn.Conv2d(
-            32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)
-        )
-        self.relu5 = nn.Tanh()
-        self.bn5 = nn.BatchNorm2d(64)
-        init.kaiming_normal_(self.conv5.weight, a=0.1)
-        self.conv5.bias.data.zero_()
-        conv_layers += [self.conv5, self.relu5, self.bn5]
-
         # Linear Classifier
         self.ap = nn.AdaptiveAvgPool2d(output_size=1)
-        self.lin = nn.Linear(in_features=64, out_features=10)
+        self.lin = nn.Linear(in_features=64, out_features=2)
 
         # Wrap the Convolutional Blocks
         self.conv = nn.Sequential(*conv_layers)
@@ -97,10 +83,10 @@ class AudioClassifier(nn.Module):
 # ----------------------------
 # Training Loop
 # ----------------------------
-def training(model, train_dl, num_epochs, delta):
+def training(model, train_dl, num_epochs, learning_rate=0.001):
     # Loss Function, Optimizer and Scheduler
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
         max_lr=0.001,
@@ -108,7 +94,7 @@ def training(model, train_dl, num_epochs, delta):
         epochs=num_epochs,
         anneal_strategy="linear",
     )
-    prev_loss = 0.0
+
     # Repeat for each epoch
     for epoch in range(num_epochs):
         running_loss = 0.0
@@ -119,6 +105,7 @@ def training(model, train_dl, num_epochs, delta):
         for i, data in enumerate(train_dl):
             # Get the input features and target labels, and put them on the GPU
             inputs, labels = data[0].to(device), data[1].to(device)
+
             # Normalize the inputs
             inputs_m, inputs_s = inputs.mean(), inputs.std()
             inputs = (inputs - inputs_m) / inputs_s
@@ -142,29 +129,16 @@ def training(model, train_dl, num_epochs, delta):
             correct_prediction += (prediction == labels).sum().item()
             total_prediction += prediction.shape[0]
 
+            # if i % 10 == 0:    # print every 10 mini-batches
+            #    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 10))
+
         # Print stats at the end of the epoch
         num_batches = len(train_dl)
         avg_loss = running_loss / num_batches
         acc = correct_prediction / total_prediction
         print(f"Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}")
-        if abs(avg_loss - prev_loss) < delta:
-            break
-        prev_loss = avg_loss
-
-    torch.save(model, "osr_model_4.pt")
 
     print("Finished Training")
-
-
-def running_average(sequence):
-    total = 0
-    averages = []
-
-    for i, number in enumerate(sequence, start=1):
-        total += number
-        averages.append(total / i)
-
-    return averages[-1]
 
 
 def main():
@@ -181,7 +155,10 @@ def main():
     df = df[["relative_path", "classID"]]
     df.head()
 
-    current_directory = os.getcwd() + "/unprocessed_audio/"
+    # process the raw data and place it in processed_audio directory
+    # processing([metadata_file])
+
+    current_directory = os.getcwd() + "/"
     myds = SoundDS(df, current_directory)
 
     # Create training data loaders
@@ -196,13 +173,13 @@ def main():
     next(myModel.parameters()).device
 
     num_epochs = (
-        25  # increase num of epochs until there isn't much change in validation loss
+        15  # increase num of epochs until there isn't much change in validation loss
     )
-    delta = 0.005
-    training(myModel, train_dl, num_epochs, delta)
+    learning_rate = 0.1
+    training(myModel, train_dl, num_epochs, learning_rate)
 
     # save model
-    PATH = "machine_learning_model_unprocessed_4.pth"
+    PATH = "train_osr.pth"
     torch.save(myModel, PATH)
 
 

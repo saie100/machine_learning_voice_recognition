@@ -48,7 +48,7 @@ def main(model_path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Read metadata file
-    metadata_file = "evaluating_metadata_target.csv"
+    metadata_file = "metadata_open_sesame.csv"
     df = pd.read_csv(metadata_file)
     df.head()
 
@@ -56,11 +56,11 @@ def main(model_path):
     df = df[["relative_path", "classID"]]
     df.head()
 
-    current_directory = os.getcwd() + "/unprocessed_audio/"
+    current_directory = os.getcwd() + "/"
     myds = SoundDS(df, current_directory)
 
     # Create validation data loaders and load model
-    val_dl = torch.utils.data.DataLoader(myds, batch_size=4, shuffle=True)
+    val_dl = torch.utils.data.DataLoader(myds, batch_size=4, shuffle=False)
     # PATH = "osr_model_3.pt"
     # PATH = "machine_learning_model_unprocessed_3.pth"
     model = torch.load(model_path)
@@ -73,5 +73,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         model_path = sys.argv[1]
     else:
-        model_path = "machine_learning_model.pth"
+        model_path = "train_osr.pth"
     main(model_path)

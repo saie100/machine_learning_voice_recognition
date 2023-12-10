@@ -72,7 +72,7 @@ def plot_spectrogram(
 
 ######################### THE CODE BELOW PROCESSES RAW AUDIO FILES AND STORES THEM AS .WAV FILE IN PROCESSED_AUDIO FOLDER ###########################################
 # Read metadata file
-metadata_file = "metadata_osr.csv"
+metadata_file = "training_metadata_open_sesame.csv"
 df = pd.read_csv(metadata_file)
 df.head()
 
@@ -84,10 +84,7 @@ current_directory = os.getcwd()
 PROCESS_DIR = "processed_audio"
 
 vad = webrtcvad.Vad(3)
-if not os.path.exists(PROCESS_DIR) and not os.path.isdir(PROCESS_DIR):
-    os.mkdir(PROCESS_DIR)
-    os.mkdir(f"{PROCESS_DIR}/target_voice_new/")
-    os.mkdir(f"{PROCESS_DIR}/other_voice_osr/")
+
 for index in range(len(df)):
     try:
         AUDIO_FILE = f'{current_directory}/{df.loc[index, "relative_path"]}'

@@ -25,61 +25,79 @@ def plot_waveform(
     waveform,
     sr,
     title="Waveform",
-    ax=None,
     file_name="images/waveform.png",
     suptitle=None,
+    ylabel="Amplitude",
+    xlabel="Time (s)",
+    left_margin=0.075,  # Default value for left margin
+    right_margin=0.95,  # Default value for right margin
 ):
     waveform = waveform.numpy()
-    num_channels, num_frames = waveform.shape
+    num_frames = waveform.shape[1]  # Updated to handle single channel waveform
     time_axis = torch.arange(0, num_frames) / sr
-    if ax is None:
-        _, ax = plt.subplots(num_channels, 1, figsize=(10, 4 * num_channels))
-    if num_channels == 1:
-        ax = [ax]
-    for i in range(num_channels):
-        if title is not None:
-            ax[i].set_title(f"{file_name} - Channel {i+1}")
-        ax[i].set_ylabel("Amplitude")
-        ax[i].plot(time_axis, waveform[i], linewidth=1)
-        # ax[i].imshow(waveform, origin="lower", aspect="auto", interpolation="nearest")
-        ax[i].grid(True)
-        ax[i].set_xlim([0, time_axis[-1]])
-        ax[i].set_title(title)
 
+    # Create a figure and a single axis
+    fig, ax = plt.subplots(figsize=(10, 4))
+
+    # Plotting the waveform
+    ax.plot(
+        time_axis, waveform[0], linewidth=1
+    )  # Assuming waveform[0] for single channel
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_xlim([0, time_axis[-1]])
+    ax.set_title(title)
+
+    # Set super title if provided
     if suptitle is not None:
         plt.suptitle(suptitle)
+
+    # Adjust the margins
+    fig.subplots_adjust(left=left_margin, right=right_margin)
+
+    # Output file name
     print(f"WAVEFORM -- {file_name}")
+
     return plt
 
 
 def plot_spectrogram(
     specgram,
     title=None,
-    ylabel="freq_bin",
-    ax=None,
+    ylabel="Frequency Bin (Hz)",
+    xlabel="frame",
     file_name="spectrogram.png",
     suptitle=None,
+    left_margin=0.075,  # Default value for left margin
+    right_margin=0.95,  # Default value for right margin
 ):
-    num_channels = specgram.shape[0]
+    # Create a figure and a single axis
+    fig, ax = plt.subplots(1, 1, figsize=(10, 4))
 
-    if ax is None:
-        _, ax = plt.subplots(num_channels, 1, figsize=(10, 4 * num_channels))
-    if num_channels == 1:
-        ax = [ax]
-    for i in range(num_channels):
-        if title is not None:
-            ax[i].set_title(title)
-        ax[i].set_ylabel(ylabel)
-        ax[i].imshow(
-            librosa.power_to_db(specgram[i]),
-            origin="lower",
-            aspect="auto",
-            interpolation="nearest",
-        )
-    plt.tight_layout()
+    # Set title and labels
+    if title is not None:
+        ax.set_title(title)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+
+    # Display the spectrogram
+    ax.imshow(
+        librosa.power_to_db(specgram[0]),  # Assuming specgram for a single channel
+        origin="lower",
+        aspect="auto",
+        interpolation="nearest",
+    )
+
+    # Set super title if provided
     if suptitle is not None:
         plt.suptitle(suptitle)
+
+    # Adjust the margins
+    fig.subplots_adjust(left=left_margin, right=right_margin)
+
+    # Output file name
     print(f"SPECTROGRAM -- {file_name}")
+
     return plt
 
 
@@ -87,7 +105,8 @@ def plot_spectrogram(
 
 
 # Read metadata file
-metadata_file = "open_dan/metadata_open_dan.csv"
+OPEN_DIR_NAME = "derek"
+metadata_file = f"open_{OPEN_DIR_NAME}/metadata_open_{OPEN_DIR_NAME}.csv"
 df = pd.read_csv(metadata_file)
 df.head()
 
@@ -97,11 +116,11 @@ df.head()
 
 
 current_directory = os.getcwd()
-IMAGE_DIR = "images_open"
+IMAGE_DIR = f"images_open_{OPEN_DIR_NAME}"
 APP_IMAGE_DIR = "display/images"
 WAVEFORM_DIR = "waveform"
-TARGET_VOICE_DIR = "open_dan/open_sesame_dan"
-OTHER_VOICE_DIR = "open_dan/open_other_dan"
+TARGET_VOICE_DIR = f"open_{OPEN_DIR_NAME}/open_sesame_{OPEN_DIR_NAME}"
+OTHER_VOICE_DIR = f"open_{OPEN_DIR_NAME}/open_other_{OPEN_DIR_NAME}"
 
 # IMAGE Directories
 os.makedirs(f"{IMAGE_DIR}/{TARGET_VOICE_DIR}", exist_ok=True)
