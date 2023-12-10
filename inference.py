@@ -1,11 +1,10 @@
 import os
 import torch
 import pandas as pd
-from SoundDS import SoundDS
+from ImageDS import ImageDS
 from AudioUtil import AudioUtil
-from torch.utils.data import random_split
 from train_model import AudioClassifier
-import sys
+from audio_processing import processing
 
 
 # ----------------------------
@@ -28,11 +27,15 @@ def inference(model, val_dl):
             # Get predictions
             outputs = model(inputs)
 
-            # Get the predicted class with the highest score
-            _, prediction = torch.max(outputs, 1)
-            # Count of predictions that matched the target label
-            correct_prediction += (prediction == labels).sum().item()
-            total_prediction += prediction.shape[0]
+        # Get the predicted class with the highest score
+        _, prediction = torch.max(outputs, 1)
+        # Count of predictions that matched the target label
+
+        print(f"\n\nMODEL PREDICTS: {prediction}")
+        print(f"LABEL MARKERD AS: {labels}\n\n")
+
+        correct_prediction += (prediction == labels).sum().item()
+        total_prediction += prediction.shape[0]
 
     acc = correct_prediction / total_prediction
     print(f"Accuracy: {acc:.2f}, Total items: {total_prediction}")
@@ -69,9 +72,45 @@ def main(model_path):
     inference(model, val_dl)
 
 
+def main():
+    # ----------------------------
+    # Prepare inference data from Metadata file
+    # ----------------------------
+
+    global device
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # Read metadata file
+    metadata_file = "testing_metadata.csv"
+
+    df = pd.read_csv(metadata_file)
+    df.head()
+
+    # Take relevant columns
+    df = df[["relative_path", "classID"]]
+    df.head()
+
+    # process the raw data and place it in images directory
+    # processing([metadata_file])
+
+    df["relative_path"] = df["relative_path"].str.replace(
+        ".wav", ".wav.png", regex=False
+    )
+    df["relative_path"] = df["relative_path"].str.replace(
+        ".flac", ".flav.png", regex=False
+    )
+
+    current_directory = os.getcwd() + "/images/"
+    myds = ImageDS(df, current_directory)
+
+    # Create validation data loaders and load model
+    val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=False)
+    PATH = "machine_learning_model.pth"
+    model = torch.load(PATH)
+
+    # Run inference on trained model with the validation set
+    inference(model, val_dl)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        model_path = sys.argv[1]
-    else:
-        model_path = "train_osr.pth"
-    main(model_path)
+    main()
