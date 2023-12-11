@@ -47,9 +47,8 @@ def plot_waveform(
 
 
 def _plot_spectrogram(
-    specgram, title=None, ylabel="freq_bin", ax=None, file_name="images/spectrogram.png"
+    specgram, title=None, ylabel="freq_bin", ax=None, file_name="images/spectrogram.png", num_channels=1
 ):  
-    num_channels = specgram.shape[0]
 
     if ax is None:
         _, ax = plt.subplots(num_channels, 1, figsize=(10, 4 * num_channels))
@@ -103,7 +102,11 @@ def processing(metadata_files: list, plot=True):
                 processed_audio_out_file =f'{current_directory}/{PROCESS_DIR}/{df.loc[index, "relative_path"]}'
                 
                 output_dir_path = os.path.dirname(os.path.realpath(processed_audio_out_file))
-                if not os.path.exists(output_dir_path) or not os.path.isdir(output_dir_path):
+                # check if file exists
+                if os.path.isfile(processed_audio_out_file):
+                    continue
+                # check if directory exists
+                elif not os.path.exists(output_dir_path) or not os.path.isdir(output_dir_path):
                     os.makedirs(output_dir_path)
 
                 output_wav = []
@@ -142,29 +145,48 @@ def plot_spectrogram(metadata_files: list):
                 AUDIO_FILE = f'{current_directory}/processed_audio/{df.loc[index, "relative_path"]}'
                 aud = AudioUtil.open(AUDIO_FILE)
                 
-                sample_rate = 44100
+                sample_rate = 48000
                 duration = 4000
-                channel = 2
-                shift_pct = 0.0
+                channel = 1
+                shift_pct = 0.4
                 # Some sounds have a higher sample rate, or fewer channels compared to the
                 # majority. So make all sounds have the same number of channels and same 
                 # sample rate. Unless the sample rate is the same, the pad_trunc will still
                 # result in arrays of different lengths, even though the sound duration is
                 # the same.
                 reaud = AudioUtil.resample(aud, sample_rate)
-                rechan = AudioUtil.rechannel(reaud, 2)
-
+                rechan = AudioUtil.rechannel(reaud, channel)
                 dur_aud = AudioUtil.pad_trunc(rechan, duration)
-                shift_aud = AudioUtil.time_shift(dur_aud, shift_pct)
-                sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
+                #shift_aud = AudioUtil.time_shift(rechan, shift_pct)
+                #sgram = AudioUtil.spectro_gram(shift_aud, n_mels=128, n_fft=512, hop_len=None)
                 #aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
-                
                 spectrogram_file_name=f'{current_directory}/{IMAGE_DIR}/{df.loc[index, "relative_path"]}.png'
                 output_dir_path = os.path.dirname(os.path.realpath(spectrogram_file_name))
-                if not os.path.exists(output_dir_path) or not os.path.isdir(output_dir_path):
+                # check if file exists
+                if os.path.isfile(spectrogram_file_name):
+                    continue
+                # check if directory exists
+                elif not os.path.exists(output_dir_path) or not os.path.isdir(output_dir_path):
                     os.makedirs(output_dir_path)
+                
+                plt.rcParams["figure.autolayout"] = True
+                fig, ax = plt.subplots(channel, 1, figsize=(4, 10))
+                
+                #y, sr = librosa.load(AUDIO_FILE)
+                #print(shift_aud)
+                y_, sr = dur_aud
+                #print(y_)
+                #print(type(y_.cpu().detach().numpy()))
 
-                _plot_spectrogram(np.squeeze(sgram), file_name=spectrogram_file_name)
+                S = librosa.feature.melspectrogram(y=np.squeeze(y_.cpu().detach().numpy()), sr=sample_rate, n_mels=256, fmax=20000, hop_length=512)
+                S_dB = librosa.power_to_db(S, ref=np.max)
+                img = librosa.display.specshow(S_dB, x_axis='off', y_axis='mel', sr=sample_rate, fmax=20000, ax=ax)
+                plt.tight_layout()
+                plt.savefig(spectrogram_file_name, bbox_inches='tight')
+                print(f"{spectrogram_file_name} spectrogram done")
+                plt.close()
+
+                #_plot_spectrogram(sgram, file_name=spectrogram_file_name, num_channels=channel)
                 #plot_entropy(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
             except Exception as e:
                 print(f"An error occured: {e}")

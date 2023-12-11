@@ -47,11 +47,11 @@ def inference (model, val_dl):
 
 def getLiveRecording(num_of_runs=1):
     #CHUNK = 1024
-    CHUNK = 48000 * 5
+    CHUNK = 48000 * 3
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 48000 
-    RECORD_SECONDS = 5
+    RECORD_SECONDS = 3
 
     p = pyaudio.PyAudio()
 
@@ -106,6 +106,8 @@ def getLiveRecording(num_of_runs=1):
     p.terminate()
 
 
+
+
 def main():
     # ----------------------------
     # Prepare inference data from Metadata file
@@ -123,16 +125,34 @@ def main():
     df = df[['relative_path', 'classID']]
     df.head()
 
-    # get live recording from user
-    getLiveRecording(num_of_runs=1)
-    # process the raw data and place it in processed_audio directory
-    processing([metadata_file])
+    
+    current_directory = os.getcwd()
 
+    try:
+        os.remove(f"{current_directory}/processed_audio/{df['relative_path'][0]}")  
+    except:
+        print(f"File do not exist: {current_directory}/processed_audio/{df['relative_path'][0]}")
+    try:
+        os.remove(f"{current_directory}/{df['relative_path'][0]}")  
+    except:
+        print(f"File do not exist: {current_directory}/{df['relative_path'][0]}")
+    
     df['relative_path'] = df['relative_path'].str.replace('.wav', '.wav.png', regex=False)
     df['relative_path'] = df['relative_path'].str.replace('.flac', '.flav.png', regex=False)
 
+    try:
+        os.remove(f"{current_directory}/images/{df['relative_path'][0]}")
+    except:
+        print(f"File do not exist: {current_directory}/images/{df['relative_path'][0]}")
+
     current_directory = os.getcwd() + "/images/"
     myds = ImageDS(df, current_directory)
+
+    # get live recording from user
+    getLiveRecording(num_of_runs=1)
+    
+    # process the raw data and place it in processed_audio directory
+    processing([metadata_file])
 
     # Create validation data loaders and load model
     val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=False)

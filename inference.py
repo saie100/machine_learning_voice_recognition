@@ -13,6 +13,8 @@ def inference (model, val_dl):
   correct_prediction = 0
   total_prediction = 0
 
+  label_to_name = {0 : 'Dan', 1 : 'David', 2 : 'Derek'}
+
   # Disable gradient updates
   with torch.no_grad():
     for data in val_dl:
@@ -29,9 +31,13 @@ def inference (model, val_dl):
       # Get the predicted class with the highest score
       _, prediction = torch.max(outputs,1)
       # Count of predictions that matched the target label
-      
-      print(f"\n\nMODEL PREDICTS: {prediction}")
-      print(f"LABEL MARKERD AS: {labels}\n\n")
+      prediction_l = prediction.numpy()[0]
+      model_l = labels.numpy()[0]
+      #print(prediction_l)
+      #print(model_l)
+
+      print(f"\n\nMODEL PREDICTS: {label_to_name[prediction_l]}")
+      print(f"LABEL MARKERD AS: {label_to_name[model_l]}\n\n")
 
       correct_prediction += (prediction == labels).sum().item()
       total_prediction += prediction.shape[0]
@@ -62,16 +68,16 @@ def main():
   df.head()
 
   # process the raw data and place it in images directory
-  #processing([metadata_file])
+  processing([metadata_file])
   
   df['relative_path'] = df['relative_path'].str.replace('.wav', '.wav.png', regex=False)
-  df['relative_path'] = df['relative_path'].str.replace('.flac', '.flav.png', regex=False)
+  #df['relative_path'] = df['relative_path'].str.replace('.flac', '.flav.png', regex=False)
 
   current_directory = os.getcwd() + "/images/"
   myds = ImageDS(df, current_directory)
 
   # Create validation data loaders and load model
-  val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=False)
+  val_dl = torch.utils.data.DataLoader(myds, batch_size=1, shuffle=True)
   PATH = "machine_learning_model.pth"
   model = torch.load(PATH)
 
