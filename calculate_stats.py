@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def calculate_training_stats(csv_file, output_csv_file):
@@ -72,30 +73,62 @@ def write_to_file(data, header, csv_file):
 def print_image(csv_file_path, image_file_path):
     df = pd.read_csv(csv_file_path)
 
+    # Define colors for 'train' and 'infer'
+    colors = {"train": "skyblue", "infer": "lightcoral"}
+
     # Plotting
     fig, ax = plt.subplots(figsize=(10, 5))
-    syracuse_orange = "#D44500"  # Orange
-    syracuse_blue = "#212B6D"  # Blue
-    # Iterate over the DataFrame and plot each bar with a specific color
-    for index, row in df.iterrows():
-        color = "skyblue" if "train" in row["model"] else "lightcoral"
-        bar = ax.bar(
-            row["model"],
-            row["mean_accuracy"],
-            yerr=row["std_accuracy"],
-            capsize=5,
-            color=color,
-        )
 
-        # Add value label on top of the bar
-        yval = row["mean_accuracy"]
-        ax.text(
-            row["model"], yval, round(yval, 3), va="bottom", ha="center", fontsize=8
-        )
+    # Unique models for plotting
+    # models = df["model"].unique()
+    # types = df["type"].unique()
+    models = ["relu", "tanh", "sigmoid"]
+    types = ["train", "infer"]
+    # Width of a bar
+    bar_width = 0.35
+    # Iterate over models
+    for i, model in enumerate(models):
+        for j, t in enumerate(types):
+            # Filter data for each model and type
+            data = df[(df["model"] == model) & (df["type"] == t)]
 
-    ax.set_title("Mean Accuracy with Standard Deviation")
+            # Calculate mean accuracy and standard deviation
+            mean_accuracy = data["mean_accuracy"].mean()
+            std_accuracy = data["std_accuracy"].mean()
+
+            # Position of the bar
+            pos = i - bar_width / 2 + j * bar_width
+
+            # Plot the bar
+            bar = ax.bar(
+                pos,
+                mean_accuracy,
+                yerr=std_accuracy,
+                width=bar_width,
+                capsize=5,
+                color=colors[t],
+                label=t if i == 0 and j == 0 else "",
+            )
+            # Add value label at the bottom of the bar
+            ax.text(
+                pos,
+                0.8,  # Adjust this value as needed
+                f"{round(mean_accuracy, 3)}",
+                va="bottom",
+                ha="center",
+                fontsize=8,
+                color="black",  # Optional: Change text color if needed
+            )
+
+    # Set labels and title
+    ax.set_xticks(np.arange(len(models)))
+    ax.set_xticklabels(models)
+    ax.set_title("Mean Accuracy with Standard Deviation by Model and Type")
     ax.set_ylabel("Accuracy")
-    ax.set_ylim(0.8, 1.05 * df["mean_accuracy"].max())
+    ax.set_ylim(0.8, 1.05)
+
+    # Add legend
+    ax.legend(["train", "infer"], loc="upper right")
 
     plt.tight_layout()
 
@@ -111,9 +144,12 @@ image_file_training_path = "models/results_training.png"
 training_stats = calculate_training_stats(
     csv_file=csv_file_training, output_csv_file=csv_file_training_stats
 )
-print_image(
-    csv_file_path=csv_file_training_stats, image_file_path=image_file_training_path
-)
+df1 = pd.read_csv(csv_file_training_stats)
+df1["type"] = "train"
+
+# print_image(
+#     csv_file_path=csv_file_training_stats, image_file_path=image_file_training_path
+# )
 
 print(training_stats)
 
@@ -125,23 +161,18 @@ image_file_path_inference = "models/results_inference.png"
 inference_stats = calculate_inference_stats(
     csv_file=csv_file_inference, output_csv_file=csv_file_inference_stats
 )
-print_image(
-    csv_file_path=csv_file_inference_stats, image_file_path=image_file_path_inference
-)
+df2 = pd.read_csv(csv_file_inference_stats)
+df2["type"] = "infer"
+# print_image(
+#     csv_file_path=csv_file_inference_stats, image_file_path=image_file_path_inference
+# )
 
 print(inference_stats)
-
-
-df1 = pd.read_csv(csv_file_training_stats)
-df2 = pd.read_csv(csv_file_inference_stats)
-
-df1["model"] = df1["model"] + " train"
-df2["model"] = df2["model"] + " infer"
 
 # Combine the two DataFrames
 combined_df = pd.concat([df1, df2], ignore_index=True)
 
-# Write the combined DataFrame to a new CSV file
+# # Write the combined DataFrame to a new CSV file
 output_csv_file = "models/combined_results.csv"
 combined_df.to_csv(output_csv_file, index=False)
 
