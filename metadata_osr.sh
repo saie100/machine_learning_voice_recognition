@@ -3,7 +3,6 @@
 # Navigate to the corpus root directory
 cd other_voice_osr
 
-
 # Create or clear the meta_data.csv file
 echo "relative_path,classID" > ../metadata_osr.csv
 
@@ -12,7 +11,7 @@ declare -A classID_map
 next_classID=0
 
 # Find all .flac files and process their paths
-find . -type f -name "*.flac" | while read -r file; do
+while read -r file; do
     # Extract the reader ID by cutting the directory path
     reader_id=$(echo "$file" | cut -d'/' -f2 | cut -d'-' -f1)
     
@@ -24,22 +23,19 @@ find . -type f -name "*.flac" | while read -r file; do
     fi
 
     # Write the relative file path and mapped class ID to the meta_data.csv file
-    if [[ ${classID_map[$reader_id]} -lt 3 ]]; then
-        # Write the relative file path and mapped class ID to the meta_data.csv file
-        # echo "other_voice_osr/${file:2},${classID_map[$reader_id]}" >> ../metadata_osr.csv
-        echo "other_voice_osr/${file:2},0" >> ../metadata_osr.csv
-    fi
-    # echo "other_voice_osr/${file:2},0" >> ../metadata_osr.csv
-    # echo "other_voice_osr/${file:2},${classID_map[$reader_id]}" >> ../metadata_osr.csv
-done
+    echo "other_voice_osr/${file:2},${classID_map[$reader_id]}" >> ../metadata_osr.csv
+done < <(find . -type f -name "*.flac")
 
 cd -
-cd target_voice
-# Find all .flac files and process their paths
-find . -type f -name "*.wav" | while read -r file; do
-    file_name=$(echo "$file" | cut -d'/' -f2)
-    echo "target_voice/${file_name},1" >> ../metadata_osr.csv
-done
 
-# Move back to the original directory
+# Move to the target_voice directory
+cd target_voice
+
+# Use next_classID directly
+# Find all .wav files and process their paths
+while read -r file; do
+    file_name=$(echo "$file" | cut -d'/' -f2)
+    echo "target_voice/${file_name},${next_classID}" >> ../metadata_osr.csv
+done < <(find . -type f -name "*.wav")
+
 cd -
