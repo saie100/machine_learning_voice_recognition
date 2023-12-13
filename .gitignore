@@ -10,3 +10,4 @@ cuda-repo-wsl-ubuntu-12-3-local_12.3.0-1_amd64.deb
 cuda-wsl-ubuntu.pin.1
 __pycache__/SoundDS.cpython-38.pyc
 __pycache__/SoundDS.cpython-38.pyc
+# models/*.pth
