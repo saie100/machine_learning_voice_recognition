@@ -10,7 +10,7 @@ def calculate_training_stats(csv_file, output_csv_file):
     # Check if the required columns are in the dataframe
     if "accuracy" in df.columns and "loss" in df.columns and "model" in df.columns:
         # Group by 'model' and calculate mean and standard deviation
-        stats = df.groupby("model").agg({"accuracy": ["mean", "std"]})
+        stats = df.groupby("model").agg({"accuracy": ["mean", "std", "max", "min"]})
         stats.columns = ["_".join(col).strip() for col in stats.columns.values]
         stats.reset_index(inplace=True)
         stats.rename(
@@ -18,6 +18,8 @@ def calculate_training_stats(csv_file, output_csv_file):
                 "model": "model",
                 "accuracy_mean": "mean_accuracy",
                 "accuracy_std": "std_accuracy",
+                "accuracy_max": "max_accuracy",
+                "accuracy_min": "min_accuracy",
             },
             inplace=True,
         )
@@ -36,7 +38,7 @@ def calculate_inference_stats(csv_file, output_csv_file):
     # Check if the required columns are in the dataframe
     if "accuracy" in df.columns and "model" in df.columns:
         # Group by 'model' and calculate mean and standard deviation
-        stats = df.groupby("model").agg({"accuracy": ["mean", "std"]})
+        stats = df.groupby("model").agg({"accuracy": ["mean", "std", "max", "min"]})
         stats.columns = ["_".join(col).strip() for col in stats.columns.values]
         stats.reset_index(inplace=True)
         stats.rename(
@@ -44,6 +46,8 @@ def calculate_inference_stats(csv_file, output_csv_file):
                 "model": "model",
                 "accuracy_mean": "mean_accuracy",
                 "accuracy_std": "std_accuracy",
+                "accuracy_max": "max_accuracy",
+                "accuracy_min": "min_accuracy",
             },
             inplace=True,
         )

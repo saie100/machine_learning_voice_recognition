@@ -149,3 +149,5 @@ accuracy,model,path
 0.9080459770114943,sigmoid,models/machine_learning_model_sigmoid48.pth
 0.8850574712643678,sigmoid,models/machine_learning_model_sigmoid49.pth
 0.8850574712643678,sigmoid,models/machine_learning_model_sigmoid50.pth
+0.9540229885057471,tanh,models/machine_learning_model_tanh22.pth
+0.9540229885057471,tanh,models/machine_learning_model_tanh22.pth
