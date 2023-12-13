@@ -21,8 +21,13 @@ import os
 run_waveform = False
 
 
-def plot_waveform(
-    waveform, sr, title="Waveform", ax=None, file_name="images/waveform.png"
+def _plot_waveform(
+    waveform, sr, title="Waveform", ax=None, file_name="images/waveform.png", 
+    ylabel="Amplitude",
+    xlabel="Time (s)",
+    suptitle=None,
+    left_margin=0.075,  # Default value for left margin
+    right_margin=0.95,  # Default value for right margin
 ):
     waveform = waveform.numpy()
     num_channels, num_frames = waveform.shape
@@ -34,16 +39,22 @@ def plot_waveform(
     for i in range(num_channels):
         if title is not None:
             ax[i].set_title(f"{file_name} - Channel {i+1}")
-        ax[i].set_ylabel("Amplitude")
+        ax[i].set_xlabel(xlabel)
+        ax[i].set_ylabel(ylabel)
         ax[i].plot(time_axis, waveform[i], linewidth=1)
         # ax[i].imshow(waveform, origin="lower", aspect="auto", interpolation="nearest")
-        ax[i].grid(True)
+        #ax[i].grid(True)
         ax[i].set_xlim([0, time_axis[-1]])
         ax[i].set_title(title)
-    # plt.savefig(file_name)
-    # plt.close()
+    
+    # Set super title if provided
+    if suptitle is not None:
+        plt.suptitle(suptitle)
+
+    plt.savefig(file_name)
+    plt.close()
     print(f"{file_name} waveform done")
-    return plt
+    #return plt
 
 
 def _plot_spectrogram(
@@ -158,7 +169,7 @@ def plot_spectrogram(metadata_files: list):
                 rechan = AudioUtil.rechannel(reaud, channel)
                 dur_aud = AudioUtil.pad_trunc(rechan, duration)
                 #shift_aud = AudioUtil.time_shift(rechan, shift_pct)
-                #sgram = AudioUtil.spectro_gram(shift_aud, n_mels=128, n_fft=512, hop_len=None)
+                sgram = AudioUtil.spectro_gram(dur_aud, n_mels=128, n_fft=512, hop_len=None)
                 #aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
                 spectrogram_file_name=f'{current_directory}/{IMAGE_DIR}/{df.loc[index, "relative_path"]}.png'
                 output_dir_path = os.path.dirname(os.path.realpath(spectrogram_file_name))
@@ -169,24 +180,74 @@ def plot_spectrogram(metadata_files: list):
                 elif not os.path.exists(output_dir_path) or not os.path.isdir(output_dir_path):
                     os.makedirs(output_dir_path)
                 
-                plt.rcParams["figure.autolayout"] = True
-                fig, ax = plt.subplots(channel, 1, figsize=(4, 10))
+                #plt.rcParams["figure.autolayout"] = True
+                #fig, ax = plt.subplots(channel, 1, figsize=(4, 10))
                 
                 #y, sr = librosa.load(AUDIO_FILE)
                 #print(shift_aud)
-                y_, sr = dur_aud
+                #y_, sr = dur_aud
                 #print(y_)
                 #print(type(y_.cpu().detach().numpy()))
 
-                S = librosa.feature.melspectrogram(y=np.squeeze(y_.cpu().detach().numpy()), sr=sample_rate, n_mels=256, fmax=20000, hop_length=512)
+                """S = librosa.feature.melspectrogram(y=np.squeeze(y_.cpu().detach().numpy()), sr=sample_rate, n_mels=256, fmax=20000, hop_length=512)
                 S_dB = librosa.power_to_db(S, ref=np.max)
                 img = librosa.display.specshow(S_dB, x_axis='off', y_axis='mel', sr=sample_rate, fmax=20000, ax=ax)
                 plt.tight_layout()
                 plt.savefig(spectrogram_file_name, bbox_inches='tight')
                 print(f"{spectrogram_file_name} spectrogram done")
-                plt.close()
+                plt.close()"""
 
-                #_plot_spectrogram(sgram, file_name=spectrogram_file_name, num_channels=channel)
+                _plot_spectrogram(sgram, file_name=spectrogram_file_name, num_channels=channel)
                 #plot_entropy(np.squeeze(aug_sgram), file_name=spectrogram_file_name)
+            except Exception as e:
+                print(f"An error occured: {e}")
+
+def plot_waveform(metadata_files: list):
+    # Read metadata file
+    current_directory = os.getcwd()
+    WAVEFORM_DIR='waveforms'    
+
+    for metadata_file in metadata_files:
+        df = pd.read_csv(metadata_file)
+        df.head()
+
+        # Take relevant columns
+        df = df[['relative_path', 'classID']]
+        df.head()
+        
+        for index in range(len(df)):
+            try:
+                AUDIO_FILE = f'{current_directory}/processed_audio/{df.loc[index, "relative_path"]}'
+                aud = AudioUtil.open(AUDIO_FILE)
+                
+                sample_rate = 48000
+                duration = 4000
+                channel = 1
+                shift_pct = 0.4
+                # Some sounds have a higher sample rate, or fewer channels compared to the
+                # majority. So make all sounds have the same number of channels and same 
+                # sample rate. Unless the sample rate is the same, the pad_trunc will still
+                # result in arrays of different lengths, even though the sound duration is
+                # the same.
+                reaud = AudioUtil.resample(aud, sample_rate)
+                rechan = AudioUtil.rechannel(reaud, channel)
+                dur_aud = AudioUtil.pad_trunc(rechan, duration)
+                
+                y_, sr = dur_aud
+                
+                #shift_aud = AudioUtil.time_shift(rechan, shift_pct)
+                #sgram = AudioUtil.spectro_gram(shift_aud, n_mels=128, n_fft=512, hop_len=None)
+                #aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1)
+                waveform_file_name=f'{current_directory}/{WAVEFORM_DIR}/{df.loc[index, "relative_path"]}.png'
+                output_dir_path = os.path.dirname(os.path.realpath(waveform_file_name))
+                # check if file exists
+                if os.path.isfile(waveform_file_name):
+                    continue
+                # check if directory exists
+                elif not os.path.exists(output_dir_path) or not os.path.isdir(output_dir_path):
+                    os.makedirs(output_dir_path)
+                
+                base_name = os.path.basename(waveform_file_name)
+                _plot_waveform(waveform=y_.cpu().detach(), sr=sample_rate, file_name=waveform_file_name, title=f"ClassID: {df.loc[index, 'classID']}", suptitle=f"Waveform: {base_name}")
             except Exception as e:
                 print(f"An error occured: {e}")
