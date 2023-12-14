@@ -105,7 +105,7 @@ def plot_spectrogram(
 
 
 # Read metadata file
-OPEN_DIR_NAME = "derek"
+OPEN_DIR_NAME = "dan"
 metadata_file = f"open_{OPEN_DIR_NAME}/metadata_open_{OPEN_DIR_NAME}.csv"
 df = pd.read_csv(metadata_file)
 df.head()
